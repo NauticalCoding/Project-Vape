@@ -9,9 +9,9 @@
 
 	OFFSETS 
 
-	Localplayer:	"client.dll"	+ 0x006CC00C
+	LocalPlayer:	"client.dll"	+ 0x006CC00C
 	Playerlist:		"client.dll"	+ 0x0062B104
-	CrosshairID:    Localplayer		+ 0x2C40
+	CrosshairID:    LocalPlayer		+ 0x2C40
 
 	Playercount:    "client.dll"	+ 0x60ABE4
 
@@ -26,6 +26,7 @@
 */
 
 #include "WindowProcess.h"
+#include <Windows.h>
 #include <string>
 
 // Structures
@@ -141,7 +142,7 @@ LRESULT CALLBACK OverlayCallback(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 				continue;
 			}
 
-			if (plyList[i].team == 1002) {
+			if (plyList[i].team == 1002) { // spectator team
 
 				continue;
 			}
@@ -158,9 +159,9 @@ LRESULT CALLBACK OverlayCallback(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 				continue;
 			}
 
-			float * scrnPos = new float[2];
+			float *scrnPos = new float[2];
 
-			if (WorldToScreenConvert(plyList[i].origin, scrnPos)) { // if they're on screen the do the works....
+			if (WorldToScreenConvert(plyList[i].origin, scrnPos)) { // if they're on screen then do the works....
 
 				// calc box size
 				int width = 20000 / dist;
@@ -238,6 +239,34 @@ LRESULT CALLBACK OverlayCallback(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 	return 0;
 }
 
+void triggerBot()
+{
+	INPUT input;
+
+	// left click press
+	input.type = INPUT_MOUSE;
+	input.mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
+	SendInput(1, &input, sizeof(INPUT));
+
+	ZeroMemory(&input, sizeof(INPUT)); // fill the memory address of 'input' with zeros
+
+	// left click release
+	input.type = INPUT_MOUSE;
+	input.mi.dwFlags = MOUSEEVENTF_LEFTUP;
+	SendInput(1, &input, sizeof(INPUT));
+}
+
+bool canTriggerBot(DWORD localplyAddr) {
+
+	// read the CrosshairID
+	int crosshairID;
+	ReadProcessMemory(game.procHandle, (DWORD*)((localplyAddr + 0x2C40)), &crosshairID, sizeof(int), NULL);
+	
+	if (crosshairID == 0 || myPlayer.health <= 0) { return false; } // crosshairID: 0 = world
+
+	return true;
+}
+
 int main()
 {
 
@@ -299,8 +328,12 @@ int main()
 			TranslateMessage(&game.overlayMsg);
 			DispatchMessage(&game.overlayMsg);
 		}
+
+		// Triggerbot
+		if (canTriggerBot(localplyAddr)) {
+			triggerBot();
+		}
 	}
-	
 	
 	system("pause");
 	game.Detatch();
