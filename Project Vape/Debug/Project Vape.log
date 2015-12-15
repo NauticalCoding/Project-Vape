@@ -1,0 +1,28 @@
+﻿Build started 12/15/2015 6:54:42 AM.
+     1>Project "C:\Users\Josh\documents\visual studio 2013\Projects\Project Vape\Project Vape\Project Vape.vcxproj" on node 2 (Rebuild target(s)).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _LIB /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt ..\..\..\..\..\Desktop\Headers\WindowProcess\WindowProcess.cpp Main.cpp
+         Main.cpp
+     1>c:\users\josh\documents\visual studio 2013\projects\project vape\project vape\main.cpp(95): warning C4244: 'initializing' : conversion from 'int' to 'float', possible loss of data
+     1>c:\users\josh\documents\visual studio 2013\projects\project vape\project vape\main.cpp(96): warning C4244: 'initializing' : conversion from 'int' to 'float', possible loss of data
+     1>c:\users\josh\documents\visual studio 2013\projects\project vape\project vape\main.cpp(98): warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
+     1>c:\users\josh\documents\visual studio 2013\projects\project vape\project vape\main.cpp(99): warning C4244: '-=' : conversion from 'double' to 'float', possible loss of data
+     1>c:\users\josh\documents\visual studio 2013\projects\project vape\project vape\main.cpp(166): warning C4244: 'initializing' : conversion from 'float' to 'int', possible loss of data
+     1>c:\users\josh\documents\visual studio 2013\projects\project vape\project vape\main.cpp(167): warning C4244: 'initializing' : conversion from 'float' to 'int', possible loss of data
+     1>c:\users\josh\documents\visual studio 2013\projects\project vape\project vape\main.cpp(170): warning C4244: 'argument' : conversion from 'float' to 'int', possible loss of data
+     1>c:\users\josh\documents\visual studio 2013\projects\project vape\project vape\main.cpp(171): warning C4244: 'argument' : conversion from 'float' to 'int', possible loss of data
+     1>c:\users\josh\documents\visual studio 2013\projects\project vape\project vape\main.cpp(177): warning C4244: 'argument' : conversion from 'float' to 'int', possible loss of data
+     1>c:\users\josh\documents\visual studio 2013\projects\project vape\project vape\main.cpp(191): warning C4244: 'argument' : conversion from 'float' to 'int', possible loss of data
+     1>c:\users\josh\documents\visual studio 2013\projects\project vape\project vape\main.cpp(193): warning C4244: 'argument' : conversion from 'float' to 'int', possible loss of data
+     1>c:\users\josh\documents\visual studio 2013\projects\project vape\project vape\main.cpp(195): warning C4244: 'argument' : conversion from 'float' to 'int', possible loss of data
+         WindowProcess.cpp
+         Generating Code...
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Josh\documents\visual studio 2013\Projects\Project Vape\Debug\Project Vape.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\Josh\documents\visual studio 2013\Projects\Project Vape\Debug\Project Vape.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Josh\documents\visual studio 2013\Projects\Project Vape\Debug\Project Vape.lib" /MACHINE:X86 Debug\WindowProcess.obj
+         Debug\Main.obj
+         Project Vape.vcxproj -> C:\Users\Josh\documents\visual studio 2013\Projects\Project Vape\Debug\Project Vape.exe
+     1>Done Building Project "C:\Users\Josh\documents\visual studio 2013\Projects\Project Vape\Project Vape\Project Vape.vcxproj" (Rebuild target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:01.15
