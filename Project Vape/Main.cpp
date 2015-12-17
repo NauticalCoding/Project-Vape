@@ -9,16 +9,14 @@
 
 	OFFSETS 
 
-	Localplayer:	"client.dll"	+ 0x006CC00C
-	Playerlist:		"client.dll"	+ 0x0062B104
+	Localplayer:	"client.dll"	+ 0x006D0D7C
+	Playerlist:		"client.dll"	+ 0x0062FF3C
 	CrosshairID:    Localplayer		+ 0x2C40
-
-	Playercount:    "client.dll"	+ 0x60ABE4
 
 	Viewmatrix: "engine.dll" + 0x5D5C54
 	Antiflick = Viewmatrix + 0x4C
 
-	Eyeangles:    "engine.dll" + 0x4AB2A4
+	Eyeangles:    "engine.dll" + 0x4B5484
 
 	PlayerStruct offsets
 
@@ -110,7 +108,7 @@ Angle VecToAngle(Vector start, Vector end)
 
 	Angle answer;
 
-	end.z = end.z + 5.0f;
+	end.z = end.z + 10.0f;
 
 	float deltX = end.x - start.x;
 	float deltY = end.y - start.y;
@@ -207,7 +205,7 @@ void RunAim(DWORD engine)
 	targ.health = -1337;
 
 	// read eye angles
-	ReadProcessMemory(game.procHandle, (DWORD*)(engine + 0x4AB2A4), &eyeAngles, sizeof(Angle), NULL);
+	ReadProcessMemory(game.procHandle, (DWORD*)(engine + 0x4B5484), &eyeAngles, sizeof(Angle), NULL);
 
 	for (int i = 0; i < playerCount; i++) {
 
@@ -243,11 +241,11 @@ void RunAim(DWORD engine)
 	}
 
 	Angle angToTarg = VecToAngle(targ.origin, myPlayer.origin);
-	WriteProcessMemory(game.procHandle, (DWORD*)(engine + 0x4AB2A4), &angToTarg, sizeof(Angle), NULL);
+	WriteProcessMemory(game.procHandle, (DWORD*)(engine + 0x4B5484), &angToTarg, sizeof(Angle), NULL);
 }
 
 // Code - Triggerbot
-void triggerBot()
+void TriggerBot()
 {
 	if (lastShot < GetTickCount() - triggerShootDelay) { // this fixes a bug where the triggerbot tries to shoot too fast and fails
 
@@ -269,7 +267,7 @@ void triggerBot()
 	}
 }
 
-bool canTriggerBot(DWORD localplyAddr) {
+bool CanTriggerBot(DWORD localplyAddr) {
 
 	if (!triggerbotOn) { // if triggerbot isnt toggled..
 
@@ -309,8 +307,8 @@ bool WorldToScreenConvert(Vector from, float * to)
 	to[0] *= invW;
 	to[1] *= invW;
 
-	int width = (int)(game.windowRect.right - game.windowRect.left);
-	int height = (int)(game.windowRect.bottom - game.windowRect.top);
+	float width = (float)(game.windowRect.right - game.windowRect.left);
+	float height = (float)(game.windowRect.bottom - game.windowRect.top);
 
 	float x = width / 2;
 	float y = height / 2;
@@ -411,13 +409,16 @@ LRESULT CALLBACK OverlayCallback(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 					// draw box + hp bar
 					Rectangle(memHDC, scrnPos[0] - width, scrnPos[1] - height, scrnPos[0] + width, scrnPos[1]);
-					Rectangle(memHDC, scrnPos[0] - width - width / 3, scrnPos[1] - height, scrnPos[0] - width, scrnPos[1]);
+					Rectangle(memHDC, scrnPos[0] - width - width / 2, scrnPos[1] - height, scrnPos[0] - width, scrnPos[1]);
 
 					SelectObject(memHDC, hpBar);
 
 					float frac = plyList[i].health / 100.0f;
+					if (frac > 1) {
+						frac = 1.0f;
+					}
 
-					Rectangle(memHDC, scrnPos[0] - width - width / 3, scrnPos[1] - height * frac, scrnPos[0] - width, scrnPos[1]);
+					Rectangle(memHDC, scrnPos[0] - width - width / 2, scrnPos[1] - height * frac, scrnPos[0] - width, scrnPos[1]);
 					SelectObject(memHDC, GetStockObject(HOLLOW_BRUSH));
 
 					// draw dist info
@@ -498,7 +499,7 @@ int main()
 	MODULEENTRY32 engine = game.GetModuleByName("engine.dll");
 
 	DWORD localplyAddr;
-	ReadProcessMemory(game.procHandle, (DWORD*)(client.modBaseAddr + 0x006CC00C), &localplyAddr, sizeof(DWORD), NULL);
+	ReadProcessMemory(game.procHandle, (DWORD*)(client.modBaseAddr + 0x006D0D7C), &localplyAddr, sizeof(DWORD), NULL);
 	
 	int antiflick = 1;
 	
@@ -508,12 +509,12 @@ int main()
 	while (true) {
 
 		// Read antiflick for view matrix
-		ReadProcessMemory(game.procHandle, (DWORD*)(engine.modBaseAddr + 0x5D5C54 + 0x4C), &antiflick, sizeof(int), NULL);
+		ReadProcessMemory(game.procHandle, (DWORD*)(engine.modBaseAddr + 0x5DFB54 + 0x4C), &antiflick, sizeof(int), NULL);
 
 		if (antiflick == 1) {
 
 			// Read view matrix
-			ReadProcessMemory(game.procHandle, (DWORD*)(engine.modBaseAddr + 0x5D5C54), &worldToScreen, sizeof(ViewMatrix), NULL);
+			ReadProcessMemory(game.procHandle, (DWORD*)(engine.modBaseAddr + 0x5DFB54), &worldToScreen, sizeof(ViewMatrix), NULL);
 		}
 
 		// Read localply
@@ -526,7 +527,7 @@ int main()
 			plyList[i] = Player();
 
 			DWORD plyAddr;
-			ReadProcessMemory(game.procHandle, (DWORD*)((client.modBaseAddr + 0x0062B104) + 0x10 * i), &plyAddr, sizeof(DWORD), NULL);
+			ReadProcessMemory(game.procHandle, (DWORD*)((client.modBaseAddr + 0x0062FF3C) + 0x10 * i), &plyAddr, sizeof(DWORD), NULL);
 
 			plyList[i].ReadMem(game.procHandle, plyAddr);
 		}
@@ -547,9 +548,9 @@ int main()
 		RunAim((DWORD)engine.modBaseAddr);
 
 		// trigger bot
-		if (canTriggerBot(localplyAddr)) { // check if we should shoot..
+		if (CanTriggerBot(localplyAddr)) { // check if we should shoot..
 
-			triggerBot(); // simulate a click
+			TriggerBot(); // simulate a click
 		}
 	}
 	
@@ -559,13 +560,14 @@ int main()
 }
 
 /* Viewmatrix finder
+
 DWORD offset = 0x0;
 
 for (; offset < 0x999999; offset += 0x4) {
 
 ReadProcessMemory(game.procHandle, (DWORD*)(engine.modBaseAddr + offset), &worldToScreen, sizeof(ViewMatrix), NULL);
 
-if (worldToScreen.A[1][1] > 1.332f && worldToScreen.A[1][1] < 1.334f) {
+if (worldToScreen.A[1][1] > 1.331f && worldToScreen.A[1][1] < 1.334f) {
 
 
 printf("0x%x\n", offset);
