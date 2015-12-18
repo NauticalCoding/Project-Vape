@@ -9,9 +9,14 @@
 
 	OFFSETS 
 
+	sv_cheats:      "engine.dll"    + 0x653998
+	host_timescale: "engine.dll"    + 0x6790F8
+
 	Localplayer:	"client.dll"	+ 0x006D0D7C
 	Playerlist:		"client.dll"	+ 0x0062FF3C
 	CrosshairID:    Localplayer		+ 0x2C40
+	mFlags:			LocalPlayer		+ 0x350
+	Forcejump:      "client.dll"    + 0x6971C4
 
 	Viewmatrix: "engine.dll" + 0x5D5C54
 	Antiflick = Viewmatrix + 0x4C
@@ -80,6 +85,7 @@ bool visualsOn			= false;
 bool triggerbotOn		= false;
 DWORD aimbotKey			= NULL;
 bool aimbotOn			= false;
+bool bhopOn				= false;
 
 bool bindPressed		= false;
 int bindPressedTick		= 0; // when was the bind pressed?
@@ -135,24 +141,37 @@ Angle VecToAngle(Vector start, Vector end)
 }
 
 // Code - Keybinds
+DWORD lastBind = 0x0;
+bool BindKey(DWORD * keyVar)
+{
+	if (*keyVar == NULL) {
+		for (DWORD i = 0x0; i < 0x80; i += 0x1) { // loop throuh all keys
+
+			if (lastBind == i) {
+
+				continue;
+			}
+
+			if (GetAsyncKeyState(i) != 0) { // this is our key
+
+				*keyVar = i;
+				lastBind = i;
+				printf("Key bound: 0x%x\n", *keyVar);
+				return true;
+			}
+		}
+		return false;
+	}
+	else {
+
+		return true;
+	}
+}
 
 void RunKeyBinds()
 {
 
-	if (aimbotKey == NULL) { // we need to choose an aimbot key..
-
-		for (DWORD i = 0x0; i < 0x80; i += 0x1) { // loop throuh all keys
-
-			if (GetAsyncKeyState(i) != 0) { // this is our key
-
-				aimbotKey = i;
-				printf("Aimbot binded to key: 0x%x\n", aimbotKey);
-				break;
-			}
-		}
-
-		return;
-	}
+	BindKey(&aimbotKey);
 
 	// aimbot
 	if (GetAsyncKeyState(aimbotKey) != 0) {
@@ -188,6 +207,15 @@ void RunKeyBinds()
 		triggerbotOn = !triggerbotOn;
 	}
 
+	// bhop
+	if (GetAsyncKeyState(VK_NUMPAD2) != 0 && !bindPressed) {
+
+		bindPressed = true;
+		bindPressedTick = GetTickCount();
+
+		bhopOn = !bhopOn;
+	}
+
 }
 
 // Code - Aim
@@ -209,7 +237,7 @@ void RunAim(DWORD engine)
 
 	for (int i = 0; i < playerCount; i++) {
 
-		if (plyList[i].health <= 1) { // they're dead
+		if (plyList[i].health <= 0) { // they're dead
 
 			continue;
 		}
@@ -242,6 +270,38 @@ void RunAim(DWORD engine)
 
 	Angle angToTarg = VecToAngle(targ.origin, myPlayer.origin);
 	WriteProcessMemory(game.procHandle, (DWORD*)(engine + 0x4B5484), &angToTarg, sizeof(Angle), NULL);
+}
+
+// Code - Bhop
+
+void RunBhop(DWORD client,DWORD localPlyAddr)
+{
+
+	if (!bhopOn) {
+
+		return;
+	}
+
+	if (GetAsyncKeyState(VK_SPACE) == 0) {
+
+		return;
+	}
+
+
+	int mFlags = 257;
+	ReadProcessMemory(game.procHandle, (DWORD*)(localPlyAddr + 0x350), &mFlags, sizeof(int), NULL);
+
+	int resetJump = 4;
+	int doJump = 5;
+
+	if (mFlags == 257) {	// jump
+
+		WriteProcessMemory(game.procHandle, (DWORD*)(client + 0x6971C4), &doJump, sizeof(int), NULL);
+	}
+	else if (mFlags == 256) { // reset jump
+
+		WriteProcessMemory(game.procHandle, (DWORD*)(client + 0x6971C4), &resetJump, sizeof(int), NULL);
+	}
 }
 
 // Code - Triggerbot
@@ -374,6 +434,15 @@ LRESULT CALLBACK OverlayCallback(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 			DrawOutlinedText(memHDC, 100, 55, std::string("Aimbot: Off"), RGB(255, 0, 0));
 		}
 
+		if (bhopOn) {
+
+			DrawOutlinedText(memHDC, 100, 75, std::string("Bhop: On"), RGB(0, 255, 0));
+		}
+		else {
+
+			DrawOutlinedText(memHDC, 100, 75, std::string("Bhop: Off"), RGB(255, 0, 0));
+		}
+
 		if (visualsOn) {
 			SetBkMode(memHDC, TRANSPARENT);
 			SetTextAlign(memHDC, TA_CENTER);
@@ -387,7 +456,7 @@ LRESULT CALLBACK OverlayCallback(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 					continue;
 				}
 
-				if (plyList[i].health <= 1) {
+				if (plyList[i].health <= 0) {
 
 					continue;
 				}
@@ -552,9 +621,13 @@ int main()
 
 			TriggerBot(); // simulate a click
 		}
+
+		// bhop
+		RunBhop((DWORD)client.modBaseAddr, localplyAddr);
 	}
 	
 	game.Detatch();
+	ExitProcess(0);
 	system("pause");
 	return 0;
 }
