@@ -75,7 +75,7 @@ struct ViewMatrix {
 
 WindProc game;
 int playerCount			= 64;
-HPEN boxPen				= CreatePen(PS_SOLID, 2, RGB(0, 255, 100));
+HPEN boxPen				= CreatePen(PS_SOLID, 2, RGB(0, 0, 255));
 HBRUSH hpBar			= CreateSolidBrush(RGB(255, 75, 75));
 
 int triggerShootDelay	= 25; // 25 ticks or milliseconds
@@ -247,7 +247,7 @@ void RunAim(DWORD engine)
 			continue;
 		}
 
-		if (plyList[i].team == 1002) { // this is a spectator
+		if (plyList[i].team == 1002 || plyList[i].team == 0) { // this is a spectator
 
 			continue;
 		}
@@ -338,7 +338,7 @@ bool CanTriggerBot(DWORD localplyAddr) {
 	int crosshairID;
 	ReadProcessMemory(game.procHandle, (DWORD*)((localplyAddr + 0x2C40)), &crosshairID, sizeof(int), NULL);
 
-	if (crosshairID == 0 || myPlayer.health <= 0 || crosshairID > playerCount) 
+	if (crosshairID == 0 || myPlayer.health <= 0 || crosshairID > playerCount || plyList[crosshairID].team == 0) 
 	{ 
 		return false; // crosshairID: 0 = world, crosshairID > playercount = invalid target
 	} 
@@ -373,11 +373,11 @@ bool WorldToScreenConvert(Vector from, float * to)
 	float x = width / 2;
 	float y = height / 2;
 
-	x += 0.5 * to[0] * width + 0.5;
-	y -= 0.5 * to[1] * height + 0.5;
+	x += 0.5f * to[0] * width + 0.5f;
+	y -= 0.5f * to[1] * height + 0.5f;
 
-	to[0] = x;
-	to[1] = y;
+	to[0] = x - 6.0f;
+	to[1] = y - 11.0f;
 
 	return true;
 }
@@ -409,38 +409,38 @@ LRESULT CALLBACK OverlayCallback(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 		if (visualsOn) {
 
-			DrawOutlinedText(memHDC, 100, 15, std::string("Visuals: On"), RGB(0, 255, 0));
+			DrawOutlinedText(memHDC, 50, 15, std::string("Visuals: On"), RGB(0, 255, 0));
 		}
 		else {
 
-			DrawOutlinedText(memHDC, 100, 15, std::string("Visuals: Off"), RGB(255, 0, 0));
+			DrawOutlinedText(memHDC, 50, 15, std::string("Visuals: Off"), RGB(255, 0, 0));
 		}
 
 		if (triggerbotOn) {
 
-			DrawOutlinedText(memHDC, 100, 35, std::string("Triggerbot: On"), RGB(0, 255, 0));
+			DrawOutlinedText(memHDC, 50, 35, std::string("Triggerbot: On"), RGB(0, 255, 0));
 		}
 		else {
 
-			DrawOutlinedText(memHDC, 100, 35, std::string("Triggerbot: Off"), RGB(255, 0, 0));
+			DrawOutlinedText(memHDC, 50, 35, std::string("Triggerbot: Off"), RGB(255, 0, 0));
 		}
 
 		if (aimbotOn) {
 
-			DrawOutlinedText(memHDC, 100, 55, std::string("Aimbot: On"), RGB(0, 255, 0));
+			DrawOutlinedText(memHDC, 50, 55, std::string("Aimbot: On"), RGB(0, 255, 0));
 		}
 		else {
 
-			DrawOutlinedText(memHDC, 100, 55, std::string("Aimbot: Off"), RGB(255, 0, 0));
+			DrawOutlinedText(memHDC, 50, 55, std::string("Aimbot: Off"), RGB(255, 0, 0));
 		}
 
 		if (bhopOn) {
 
-			DrawOutlinedText(memHDC, 100, 75, std::string("Bhop: On"), RGB(0, 255, 0));
+			DrawOutlinedText(memHDC, 50, 75, std::string("Bhop: On"), RGB(0, 255, 0));
 		}
 		else {
 
-			DrawOutlinedText(memHDC, 100, 75, std::string("Bhop: Off"), RGB(255, 0, 0));
+			DrawOutlinedText(memHDC, 50, 75, std::string("Bhop: Off"), RGB(255, 0, 0));
 		}
 
 		if (visualsOn) {
@@ -451,7 +451,7 @@ LRESULT CALLBACK OverlayCallback(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 			for (int i = 0; i < playerCount; i++) {
 
-				if (plyList[i].team == 1002) {
+				if (plyList[i].team == 1002 || plyList[i].team == 0) {
 
 					continue;
 				}
@@ -473,12 +473,12 @@ LRESULT CALLBACK OverlayCallback(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 				if (WorldToScreenConvert(plyList[i].origin, scrnPos)) { // if they're on screen the do the works....
 
 					// calc box size
-					int width = 20000 / dist;
-					int height = 50000 / dist;
+					int width = (int)(20000.0f / dist);
+					int height = (int)(52000.0f / dist);
 
 					// draw box + hp bar
 					Rectangle(memHDC, scrnPos[0] - width, scrnPos[1] - height, scrnPos[0] + width, scrnPos[1]);
-					Rectangle(memHDC, scrnPos[0] - width - width / 2, scrnPos[1] - height, scrnPos[0] - width, scrnPos[1]);
+					Rectangle(memHDC, scrnPos[0] - width - 10, scrnPos[1] - height, scrnPos[0] - width, scrnPos[1]);
 
 					SelectObject(memHDC, hpBar);
 
@@ -487,7 +487,7 @@ LRESULT CALLBACK OverlayCallback(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 						frac = 1.0f;
 					}
 
-					Rectangle(memHDC, scrnPos[0] - width - width / 2, scrnPos[1] - height * frac, scrnPos[0] - width, scrnPos[1]);
+					Rectangle(memHDC, scrnPos[0] - width - 10, scrnPos[1] - height * frac, scrnPos[0] - width, scrnPos[1]);
 					SelectObject(memHDC, GetStockObject(HOLLOW_BRUSH));
 
 					// draw dist info
@@ -495,8 +495,12 @@ LRESULT CALLBACK OverlayCallback(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 					std::string distStr = std::string("Dist: ");
 					distStr.append(std::to_string((int)dist));
 
-					// Outlined text
-					DrawOutlinedText(memHDC, scrnPos[0], scrnPos[1] - height - 20, distStr, RGB(0, 255, 100));
+					DrawOutlinedText(memHDC, scrnPos[0], scrnPos[1] - height - 20, distStr, RGB(255, 100, 0));
+
+					std::string teamStr = std::string("Team: ");
+					teamStr.append(std::to_string(plyList[i].team));
+
+					DrawOutlinedText(memHDC, scrnPos[0], scrnPos[1] - height - 40, teamStr, RGB(255, 100, 0));
 
 				}
 
@@ -548,7 +552,7 @@ LRESULT CALLBACK OverlayCallback(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 int main()
 {
 
-	printf("Loading Project Vapor by Nautical & Fisheater.");
+	printf("Loading Project Vapor by Nautical & Fisheater.\n");
 
 	while (!game.AttachToWindow("Garry's Mod")) {
 		
@@ -596,7 +600,7 @@ int main()
 			plyList[i] = Player();
 
 			DWORD plyAddr;
-			ReadProcessMemory(game.procHandle, (DWORD*)((client.modBaseAddr + 0x0062FF3C) + 0x10 * i), &plyAddr, sizeof(DWORD), NULL);
+			ReadProcessMemory(game.procHandle, (DWORD*)((client.modBaseAddr + 0x62FF3C) + 0x10 * i), &plyAddr, sizeof(DWORD), NULL);
 
 			plyList[i].ReadMem(game.procHandle, plyAddr);
 		}
